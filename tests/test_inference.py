@@ -299,6 +299,22 @@ class TestMakeEmbeddings(unittest.TestCase):
         new_files = after - before
         self.assertEqual(len(new_files), 0, f"Leftover memmap files: {new_files}")
 
+    def test_empty_dataset_raises_value_error(self):
+        """Should raise ValueError when spatial dims are incompatible with window_size."""
+        from src.inference import make_embeddings
+
+        # Create a dataset with spatial dims not divisible by window_size
+        ds = _make_dataset_output(1, 1)
+        with self.assertRaises(ValueError):
+            make_embeddings(
+                self.model,
+                ds,
+                window_size=2,  # larger than 1×1 spatial dims
+                patch_size=1,
+                batch_size=4,
+                device=self.device,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
