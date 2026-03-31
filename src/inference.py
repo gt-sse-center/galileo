@@ -96,7 +96,6 @@ return_memmap : bool, default False
 from __future__ import annotations
 
 import logging
-import os
 import tempfile
 from typing import Any, Optional
 
@@ -216,14 +215,7 @@ def make_embeddings(
     batch_iter = datasetoutput.in_pixel_batches(batch_size=batch_size, window_size=window_size)
 
     # --- Probe first batch to discover embedding dimension ---
-    try:
-        first_batch = next(batch_iter)
-    except StopIteration:
-        raise ValueError(
-            "DatasetOutput yielded zero batches — the spatial dimensions "
-            f"({datasetoutput.space_time_x.shape[0]}×{datasetoutput.space_time_x.shape[1]}) "
-            f"may be smaller than window_size={window_size}."
-        )
+    first_batch = next(batch_iter)
     first_embeddings = _run_single_batch(model, first_batch, device, patch_size)
     embed_dim = first_embeddings.shape[1]
     logger.info("Embedding dimension: %d (discovered from first batch)", embed_dim)
@@ -278,6 +270,7 @@ def make_embeddings(
     result = np.array(reshaped)
     del memmap
     del reshaped
+    import os
 
     try:
         os.unlink(tmp_path)
